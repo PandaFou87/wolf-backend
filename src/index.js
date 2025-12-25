@@ -9,6 +9,7 @@ app.use(cors());
 app.use(express.json());
 
 // Route test
+
 app.get('/', (req, res) => {
   res.send('🐺 Wolf backend is running');
 });
@@ -16,6 +17,7 @@ app.get('/', (req, res) => {
 // Routes auth
 app.use('/auth', require('./routes/auth'));
 app.use('/guilds', require('./routes/guilds'));
+app.use('/me', require('./routes/me'));
 
 
 // Port
