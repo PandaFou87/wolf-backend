@@ -8,10 +8,8 @@ router.get('/', authJWT, (req, res) => {
   let avatarUrl = null;
 
   if (user.avatar) {
-    const isAnimated = user.avatar.startsWith('a_');
-    const extension = isAnimated ? 'gif' : 'png';
-
-    avatarUrl = `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.${extension}`;
+    // 🔥 FORCER PNG STATIQUE (même si avatar animé)
+    avatarUrl = `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=128`;
   }
 
   res.json({
@@ -22,3 +20,4 @@ router.get('/', authJWT, (req, res) => {
 });
 
 module.exports = router;
+
