@@ -18,6 +18,7 @@ app.get('/', (req, res) => {
 app.use('/auth', require('./routes/auth'));
 app.use('/guilds', require('./routes/guilds'));
 app.use('/me', require('./routes/me'));
+app.use('/guilds/managed', require('./routes/guildsManaged'));
 
 
 // Port
