@@ -58,7 +58,8 @@ router.get('/discord/callback', async (req, res) => {
     );
 
     // 4️⃣ Redirect vers l’app mobile (DEEP LINK)
-    res.redirect(`wolfmobile://?token=${jwtToken}`);
+    res.redirect(`wolfmobile://?token=${encodeURIComponent(jwtToken)}`);
+
 
   } catch (err) {
     console.error('❌ AUTH ERROR:', err.response?.data || err);
