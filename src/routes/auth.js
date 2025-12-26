@@ -2,22 +2,29 @@ const express = require('express');
 const router = express.Router();
 const axios = require('axios');
 const jwt = require('jsonwebtoken');
-const tokenStore = require('../auth/tokenStore');
 
+/**
+ * 🔐 Step 1 — Redirect vers Discord
+ */
 router.get('/discord', (req, res) => {
-  const redirect = `https://discord.com/oauth2/authorize?client_id=${process.env.DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(
-    process.env.DISCORD_REDIRECT_URI
-  )}&response_type=code&scope=identify%20guilds`;
+  const redirect = `https://discord.com/oauth2/authorize?` +
+    `client_id=${process.env.DISCORD_CLIENT_ID}` +
+    `&redirect_uri=${encodeURIComponent(process.env.DISCORD_REDIRECT_URI)}` +
+    `&response_type=code` +
+    `&scope=identify guilds`;
 
   res.redirect(redirect);
 });
 
+/**
+ * 🔁 Step 2 — Callback Discord
+ */
 router.get('/discord/callback', async (req, res) => {
   const code = req.query.code;
   if (!code) return res.status(400).send('No code');
 
   try {
-    // 1️⃣ Échange du code contre un token OAuth
+    // 1️⃣ Exchange code → OAuth token
     const tokenRes = await axios.post(
       'https://discord.com/api/oauth2/token',
       new URLSearchParams({
@@ -27,59 +34,38 @@ router.get('/discord/callback', async (req, res) => {
         code,
         redirect_uri: process.env.DISCORD_REDIRECT_URI
       }),
-      {
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-      }
+      { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
     );
 
-    const { access_token, expires_in } = tokenRes.data;
+    const { access_token } = tokenRes.data;
 
-    // 2️⃣ Récupération de l’utilisateur Discord
+    // 2️⃣ Get Discord user
     const userRes = await axios.get('https://discord.com/api/users/@me', {
       headers: { Authorization: `Bearer ${access_token}` }
     });
 
     const user = userRes.data;
 
-    // 3️⃣ Sauvegarde du token Discord (APRÈS user)
-    tokenStore.save(user.id, access_token, expires_in);
-
-    // 4️⃣ Génération du JWT backend
+    // 3️⃣ Create JWT
     const jwtToken = jwt.sign(
       {
         id: user.id,
         username: user.username,
-        avatar: user.avatar 
+        avatar: user.avatar
       },
       process.env.JWT_SECRET,
       { expiresIn: '7d' }
     );
 
-    // 5️⃣ Réponse finale
-res.send(`
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8" />
-  <title>Wolf Login</title>
-</head>
-<body>
-  <script>
-    window.location.href = "exp://192.168.1.21:8081?token=${jwtToken}";
-  </script>
-  Connexion en cours…
-</body>
-</html>
-`);
-
-
-
+    // 4️⃣ Redirect vers l’app mobile (DEEP LINK)
+    res.redirect(`wolfmobile://?token=${jwtToken}`);
 
   } catch (err) {
     console.error('❌ AUTH ERROR:', err.response?.data || err);
-    res.status(500).json(err.response?.data || { error: 'auth_failed' });
+    res.status(500).json({ error: 'auth_failed' });
   }
 });
 
 module.exports = router;
+
 
