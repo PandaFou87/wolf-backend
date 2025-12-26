@@ -48,7 +48,8 @@ router.get('/discord/callback', async (req, res) => {
     const jwtToken = jwt.sign(
       {
         id: user.id,
-        username: user.username
+        username: user.username,
+        avatar: user.avatar 
       },
       process.env.JWT_SECRET,
       { expiresIn: '7d' }
