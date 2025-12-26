@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const authJWT = require('../middlewares/authJWT');
-const fetch = require('node-fetch');
+
 
 router.get('/', authJWT, async (req, res) => {
   try {
